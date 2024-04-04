@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Race</title>
+    <style>
+        .race-track {
+            position: relative;
+            height: 280px;
+            margin-top: 20px;
+            border: 1px solid #000;
+            overflow: hidden;
+        }
+
+        .car {
+            position: absolute;
+            top: 0;
+            width: 50px;
+            height: 30px;
+            background-color: #ccc;
+            border: 1px solid #000;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 30px;
+        }
+
+        #winner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            display: none;
+        }
+
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #start-line, #finish-line {
+            position: absolute;
+            height: 100%;
+            width: 5px;
+            background-color: #000;
+        }
+
+        #start-line {
+            left: 0;
+        }
+
+        #finish-line {
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="race-track">
+        <div id="start-line"></div>
+        <div id="finish-line"></div>
+        <div id="winner"></div>
+        <!-- Cars will be dynamically added here -->
+    </div>
+
+    <table id="raceInfoTable">
+        <thead>
+            <tr>
+                <th>Car</th>
+                <th>Turn</th>
+                <th>Remaining Gas (litres)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table body will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        class Car {
+            constructor(brand, model, year, color, price, gas) {
+                this.brand = brand;
+                this.model = model;
+                this.year = year;
+                this.color = color;
+                this.price = price;
+                this.remainingGas = gas;
+                this.position = 0;
+                this.interval = null;
+                this.turn = 0;
+                this.speed = Math.random() * 2 + 1; // Random speed between 1 and 3 units per second
+            }
+
+            honk() {
+                console.log(`Tuut tuut
+                    Brand: ${this.brand}
+                    Model: ${this.model}
+                    Year: ${this.year}
+                    Color: ${this.color}
+                    Price: $${this.price}
+                    Gas: ${this.remainingGas} litres`);
+            }
+
+            race() {
+                this.honk();
+                this.interval = setInterval(() => {
+                    if (this.turn >= 7 || this.remainingGas <= 0) {
+                        clearInterval(this.interval);
+                        if (this.remainingGas > 0) {
+                            document.getElementById('winner').innerText = `Winner: ${this.brand} ${this.model}`;
+                            document.getElementById('winner').style.display = 'block';
+                        } else {
+                            document.getElementById('raceInfoTable').getElementsByTagName('tbody')[0].insertAdjacentHTML('beforeend', `<tr><td>${this.brand} ${this.model}</td><td>${this.turn}</td><td>No gas remaining</td></tr>`);
+                        }
+                        return;
+                    }
+
+                    this.turn++;
+                    const distance = this.speed;
+                    this.position += distance;
+
+                    const gasLossPerTurn = this.year === new Date().getFullYear() ? 5 : (5 + (new Date().getFullYear() - this.year));
+                    this.remainingGas -= gasLossPerTurn;
+
+                    if (this.remainingGas < 0) {
+                        this.remainingGas = 0;
+                    }
+
+                    this.updateRaceInfo();
+
+                    document.getElementById(`car${this.brand}`).style.left = `${this.position}%`;
+                }, 1000);
+            }
+
+            updateRaceInfo() {
+                document.getElementById('raceInfoTable').getElementsByTagName('tbody')[0].insertAdjacentHTML('beforeend', `<tr><td>${this.brand} ${this.model}</td><td>${this.turn}</td><td>${this.remainingGas.toFixed(2)}</td></tr>`);
+            }
+        }
+
+        const cars = [
+            new Car("Honda", "CR-V", 2023, "Red", 50000, 45),
+            new Car("Ford", "F-150", 2020, "Black", 25000, 30),
+            new Car("BMW", "X5", 2022, "Green", 60000, 65),
+            new Car("Mazda", "CX-5", 2019, "White", 15000, 60),
+            new Car("Audi", "Q7", 2018, "Silver", 52000, 47),
+            new Car("Kia", "Forte", 2020, "Blue", 21000, 56)
+        ];
+
+        // Set cars at start line
+        cars.forEach((car, index) => {
+            const carElement = document.createElement('div');
+            carElement.classList.add('car');
+            carElement.id = `car${car.brand}`;
+            carElement.style.backgroundColor = car.color; // Set car color
+            carElement.style.left = `0`; // Set initial position at start line
+            carElement.style.top = `${index * 40 + 10}px`; // Set vertical position with separation
+            document.querySelector('.race-track').appendChild(carElement);
+            car.race(); // Start race when creating cars
+        });
+    </script>
+</body>
+</html>
